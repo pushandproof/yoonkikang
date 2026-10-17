@@ -7,6 +7,9 @@
 
 window.SITE = {
   name: "Yoon Kikang",
+  nameKor: "윤기강",
+  // SHA-256 of the client-preview password (not the password itself)
+  passwordHash: "faa7d0e9d264a4c8d5c8d1824994b83a77d98ce6966eb64962cd2c6a410e6b08",
   born: { kor: "2002, 서울", eng: "2002, Seoul" },
 
   works: [
@@ -28,7 +31,8 @@ window.SITE = {
         { x: 70, y: 120, w: 20, ratio: 1.1, caption: "caption" }
       ],
       installation: {
-        image: { ratio: 0.695 },
+        // one entry per installation shot; click left / right half to move
+        images: [{ ratio: 0.695 }, { ratio: 0.75 }, { ratio: 1.3 }],
         caption: [
           "Yoon Kikang",
           "<i>Integration and transformation</i>",
@@ -45,7 +49,8 @@ window.SITE = {
       count: 12,
       images: [], // e.g. [{ src: "images/bf-01.jpg" }, ...]  — portrait 4:5 recommended
       installation: {
-        image: { ratio: 0.695 },
+        // one entry per installation shot; click left / right half to move
+        images: [{ ratio: 0.695 }, { ratio: 0.75 }, { ratio: 1.3 }],
         caption: ["Yoon Kikang", "<i>Breathing Faces</i>", "", ""]
       }
     },
@@ -53,12 +58,13 @@ window.SITE = {
       slug: "100-seconds",
       title: "백 초 세기",
       year: "2026",
-      view: "grid", // pinch zoom + focusing
+      view: "grid", // pinch zoom
       count: 100,
       columns: 10,
       images: [],
       installation: {
-        image: { ratio: 0.695 },
+        // one entry per installation shot; click left / right half to move
+        images: [{ ratio: 0.695 }, { ratio: 0.75 }, { ratio: 1.3 }],
         caption: ["Yoon Kikang", "<i>백 초 세기</i>", "", ""]
       }
     }

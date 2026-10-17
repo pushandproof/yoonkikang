@@ -26,11 +26,42 @@
     ? `<span class="ph" ${extra}><img src="${im.src}" alt="${im.alt || ""}" loading="lazy"></span>`
     : `<span class="ph" ${extra}></span>`;
 
+  /* ---------- client preview password ---------- */
+  // Soft gate only: keeps casual visitors out while the site is client-only.
+  const unlocked = () => !S.passwordHash || store.get("yk-pass") === S.passwordHash;
+  const sha256 = async (t) => {
+    const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  };
+  function gate() {
+    body.classList.add("is-locked");
+    app.append(h(`<form class="lock" autocomplete="off">
+      <label for="pw">password</label>
+      <input id="pw" type="password" autocomplete="current-password" spellcheck="false">
+      <button type="submit">Enter</button>
+      <div class="lock-msg" aria-live="polite"></div>
+    </form>`));
+    const f = app.querySelector(".lock"), i = f.querySelector("input"), m = f.querySelector(".lock-msg");
+    i.focus();
+    on(i, "input", () => { m.textContent = ""; });
+    on(f, "submit", async (e) => {
+      e.preventDefault();
+      const hash = await sha256(i.value.trim());
+      if (hash === S.passwordHash) { store.set("yk-pass", hash); route(); }
+      else { m.textContent = "incorrect"; i.select(); }
+    });
+  }
+
+  // name: English by default, Korean on hover (swap handled in CSS)
+  document.querySelector("[data-name]").textContent = S.name;
+  document.querySelector("[data-name-kor]").textContent = S.nameKor;
+
   /* ---------- router ---------- */
   function route() {
     cleanup.forEach((f) => f()); cleanup = [];
     body.className = ""; app.innerHTML = ""; window.scrollTo(0, 0);
     document.querySelector("[data-born]").textContent = S.born[lang];
+    if (!unlocked()) return gate();
 
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (parts[0] === "works") return works(parts[1], parts[2] === "installation");
@@ -63,12 +94,32 @@
   }
 
   function installView(w) {
-    const i = w.installation;
-    const cap = i.caption.filter(Boolean).join("<br>");
+    const I = w.installation, list = I.images;
+    let k = 0;
     app.append(h(`<section class="install">
-      <span class="ph" style="aspect-ratio:${1 / i.image.ratio}">${i.image.src ? `<img src="${i.image.src}" alt="">` : ""}</span>
-      <div class="cap">${cap}</div>
-    </section>`));
+      <div class="stage"></div>
+      <div class="cap">${I.caption.filter(Boolean).join("<br>")}</div>
+      <div class="count"></div>
+    </section><span class="cursor-label" aria-hidden="true"></span>`));
+    const stage = app.querySelector(".stage"), count = app.querySelector(".count"), label = app.querySelector(".cursor-label");
+    const show = () => {
+      const im = list[k];
+      stage.innerHTML = `<span class="ph" style="aspect-ratio:${1 / im.ratio}">${im.src ? `<img src="${im.src}" alt="">` : ""}</span>`;
+      count.textContent = list.length > 1 ? `${k + 1} / ${list.length}` : "";
+    };
+    const go = (d) => { if (list.length < 2) return; k = (k + d + list.length) % list.length; show(); };
+    show();
+    if (list.length < 2) return;
+    stage.classList.add("nav");
+    const side = (e) => { const r = stage.getBoundingClientRect(); return e.clientX - r.left < r.width / 2 ? -1 : 1; };
+    on(stage, "click", (e) => go(side(e)));
+    on(stage, "mousemove", (e) => {
+      label.textContent = side(e) < 0 ? "Previous" : "Next";
+      label.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 10}px)`;
+      label.classList.add("on");
+    });
+    on(stage, "mouseleave", () => label.classList.remove("on"));
+    on(window, "keydown", (e) => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); });
   }
 
   // 시 — off-grid scrollable view
@@ -123,21 +174,15 @@
     on(wrap, "scroll", off);
   }
 
-  // 백 초 세기 — pinch zoom + focusing
+  // 백 초 세기 — pinch zoom
   function grid(w) {
     const n = w.images.length || w.count;
     const tiles = Array.from({ length: n }, (_, i) => img(w.images[i])).join("");
     app.append(h(`<div class="grid-wrap"><div class="grid" style="--cols:${w.columns}">${tiles}</div></div>
-      <div class="grid-hint">pinch / ⌘ + scroll to zoom</div>`));
+      <div class="grid-hint">${matchMedia("(hover: hover)").matches ? "pinch or ⌘ + scroll to zoom" : "pinch to zoom"}</div>`));
 
     const wrap = app.querySelector(".grid-wrap");
     const g = app.querySelector(".grid");
-    const cells = [...g.children];
-    // each tile has its own drift direction, fixed for this visit
-    const drift = cells.map(() => {
-      const a = Math.random() * Math.PI * 2, m = 0.35 + Math.random() * 0.65;
-      return [Math.cos(a) * m, Math.sin(a) * m];
-    });
 
     let cell = innerWidth < 760 ? 26 : 40;
     const MIN = 18, MAX = 220;
@@ -161,7 +206,6 @@
       if (!(e.ctrlKey || e.metaKey)) return;
       e.preventDefault();
       setCell(cell * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
-      focus(e.clientX, e.clientY);
     }, { passive: false });
 
     // touch pinch
@@ -181,33 +225,11 @@
       if (e.key === "-" || e.key === "_") setCell(cell / 1.25);
     });
 
-    // focusing: tiles near the cursor stay in register, distant ones drift loose
-    let raf = 0, last = null;
-    const focus = (x, y) => { last = [x, y]; if (!raf) raf = requestAnimationFrame(apply); };
-    const apply = () => {
-      raf = 0;
-      const r0 = cell * 1.6, r1 = cell * 9, amp = cell * 0.85;
-      cells.forEach((c, i) => {
-        let f = 0;
-        if (last) {
-          const r = c.getBoundingClientRect();
-          const d = Math.hypot(r.left + r.width / 2 - last[0], r.top + r.height / 2 - last[1]);
-          const t = Math.max(0, Math.min(1, (d - r0) / (r1 - r0)));
-          f = t * t * (3 - 2 * t);
-        }
-        c.style.transform = f ? `translate(${drift[i][0] * amp * f}px, ${drift[i][1] * amp * f}px)` : "";
-      });
-    };
-    if (matchMedia("(hover: hover)").matches) {
-      on(g, "mousemove", (e) => focus(e.clientX, e.clientY));
-      on(g, "mouseleave", () => { last = null; if (!raf) raf = requestAnimationFrame(apply); });
-    }
-    cleanup.push(() => cancelAnimationFrame(raf));
   }
 
   /* ---------- about ---------- */
   function about(tab) {
-    body.classList.add("is-about");
+    body.classList.add("is-about", "tab-" + tab);
     document.title = `About — ${S.name}`;
     const A = S.about;
     const tabs = [["cv", "CV"], ["text", "Text"], ["contact", "Contact"]];

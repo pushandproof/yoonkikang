@@ -150,12 +150,19 @@
     }, { passive: false });
 
     if (!matchMedia("(hover: hover)").matches) return;
+    const tilesEls = [...wrap.querySelectorAll(".ph")];
+    // give every tile a random place in the fade sequence
+    const scatterDelays = (step) => {
+      const order = tilesEls.map((_, i) => i).sort(() => Math.random() - 0.5);
+      order.forEach((ti, n) => tilesEls[ti].style.setProperty("--d", `${n * step}ms`));
+    };
     let hot = null;
     on(wrap, "mousemove", (e) => {
       const t = e.target.closest(".ph");
       if (!t) return off();
+      if (!hot) scatterDelays(45);            // others vanish one by one, random order
       if (t !== hot) {
-        if (hot) hot.classList.remove("hot");
+        if (hot) { hot.style.setProperty("--d", "0ms"); hot.classList.remove("hot"); }
         hot = t; hot.classList.add("hot");
         loupe.style.backgroundImage = `url("${srcs[+t.dataset.i]}")`;
       }
@@ -167,7 +174,9 @@
       loupe.classList.add("on"); body.classList.add("loupe-on");
     });
     const off = () => {
-      if (hot) hot.classList.remove("hot");
+      if (!hot) return;
+      scatterDelays(20);                       // and return, also in random order
+      hot.classList.remove("hot");
       hot = null; loupe.classList.remove("on"); body.classList.remove("loupe-on");
     };
     on(wrap, "mouseleave", off);

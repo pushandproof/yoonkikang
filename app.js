@@ -175,6 +175,10 @@
     </section><span class="cursor-label" aria-hidden="true"></span>`));
     const stage = app.querySelector(".stage"), ph = stage.querySelector(".ph"), pic = stage.querySelector("img");
     const cap = app.querySelector(".cap"), count = app.querySelector(".count"), label = app.querySelector(".cursor-label");
+    // phones: tell CSS where the frame starts, so a vertical shot never runs past the bottom of the screen
+    const sec = app.querySelector(".install");
+    const fitRoom = () => sec.style.setProperty("--st", Math.round(stage.getBoundingClientRect().top + scrollY) + "px");
+    fitRoom(); on(window, "resize", fitRoom);
 
     let token = 0;
     const show = async () => {

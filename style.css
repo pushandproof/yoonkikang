@@ -257,7 +257,7 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
   /* installation */
   .install { min-height: 0; padding: 8px var(--gutter) 60px; }
   /* frame height fixed so image + caption fit on one screen; image keeps its own ratio inside it */
-  .install { --mh: max(200px, calc(100svh - 445px)); }
+  .install { --mh: max(200px, calc(100svh - 465px)); --room: calc(100svh - var(--st, 300px) - 12px); }
   .install .stage {
     position: static; transform: none; height: var(--mh);
     display: flex; align-items: center; justify-content: center;
@@ -267,8 +267,8 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
     max-height: none; max-width: none; aspect-ratio: 1 / var(--r);
   }
   /* vertical shots: 70% of the screen height, starting at the frame top; the caption may sit over the image */
-  .install .ph.tall { width: min(100vw, calc(70svh / var(--r))); max-width: 100vw; flex: none; align-self: flex-start; }
-  .install { padding-bottom: max(60px, calc(70svh - var(--mh) + 24px)); }
+  .install .ph.tall { width: min(100vw, calc(min(70svh, var(--room)) / var(--r))); max-width: 100vw; flex: none; align-self: flex-start; }
+  .install { padding-bottom: 12px; }
   .install .cap-block { position: relative; z-index: 6; }
   .install .cap-block { position: static; margin-top: 18px; }
 

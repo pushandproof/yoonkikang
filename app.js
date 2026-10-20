@@ -186,6 +186,7 @@
       await preload(instSrc(im.src));        // swap only once decoded: no blank flash
       if (t !== token) return;
       ph.style.setProperty("--r", im.ratio || 0.75);
+      ph.classList.toggle("tall", (im.ratio || 0.75) > 1);   // vertical shot
       pic.src = instSrc(im.src);
       [1, 2, -1].forEach((d) => preload(instSrc(list[(k + d + list.length) % list.length].src)));
     };

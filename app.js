@@ -17,6 +17,10 @@
 
   // medium-size copy (images/m/…) for anything shown small; full size for close looks
   const med = (src) => src && src.replace(/^images\//, "images/m/");
+  const small = (src) => src && src.replace(/^images\//, "images/s/");     // 480px, 백 초 세기 grid only
+  const phone = () => !matchMedia("(min-width: 761px)").matches;
+  // installation: the 1400px copy is plenty on a phone screen
+  const instSrc = (src) => (phone() ? med(src) : src);
   const preload = (src) => { if (!src) return Promise.resolve(); const i = new Image(); i.decoding = "async"; i.src = src; return i.decode().catch(() => {}); };
 
   const img = (im, extra = "") => im && im.src
@@ -179,11 +183,11 @@
       if (ex && !im.caption && lines[1]) lines[1] = `<a href="#/about/cv/${ex.id}">${lines[1]}</a>`;
       cap.innerHTML = lines.filter(Boolean).join("<br>");
       count.textContent = list.length > 1 ? `${k + 1} / ${list.length}` : "";
-      await preload(im.src);                 // swap only once decoded: no blank flash
+      await preload(instSrc(im.src));        // swap only once decoded: no blank flash
       if (t !== token) return;
       ph.style.setProperty("--r", im.ratio || 0.75);
-      pic.src = im.src;
-      [1, 2, -1].forEach((d) => preload(list[(k + d + list.length) % list.length].src));
+      pic.src = instSrc(im.src);
+      [1, 2, -1].forEach((d) => preload(instSrc(list[(k + d + list.length) % list.length].src)));
     };
     const go = (d) => { if (list.length < 2) return; k = (k + d + list.length) % list.length; show(); };
     show();
@@ -289,7 +293,8 @@
   function grid(w) {
     const n = w.images.length || w.count;
     // no lazy loading here: every tile is on screen at once
-    const tiles = Array.from({ length: n }, (_, i) => img(w.images[i]).replace(' loading="lazy"', "")).join("");
+    // small thumbnails first (fast on phones); sharper copies only once someone zooms in
+    const tiles = Array.from({ length: n }, (_, i) => img(w.images[i]).replace(' loading="lazy"', "").replace('src="images/m/', 'src="images/s/')).join("");
     app.append(h(`<div class="grid-view"><div class="grid" style="--cols:${w.columns}">${tiles}</div></div>
       <div class="grid-hint">${hover ? "scroll to zoom · drag to move" : "pinch to zoom · drag to move"}</div>`));
 
@@ -298,11 +303,17 @@
     let s = 1, tx = 0, ty = 0, raf = 0, idle = 0;
     const MIN = 0.5, MAX = 9;
 
+    let sharp = false;
+    const sharpen = () => {
+      if (sharp || 40 * s * (devicePixelRatio || 1) < 360) return;
+      sharp = true;
+      g.querySelectorAll("img").forEach((im) => { const hi = im.getAttribute("src").replace("images/s/", "images/m/"); preload(hi).then(() => { im.src = hi; }); });
+    };
     const apply = () => { raf = 0; g.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${s})`; };
     const paint = () => {
       if (!raf) raf = requestAnimationFrame(apply);
       // while moving keep it on the GPU; once still, re-raster so zoomed tiles are sharp
-      g.classList.add("moving"); clearTimeout(idle); idle = setTimeout(() => g.classList.remove("moving"), 180);
+      g.classList.add("moving"); clearTimeout(idle); idle = setTimeout(() => { g.classList.remove("moving"); sharpen(); }, 180);
     };
     const fit = () => {
       const r = view.getBoundingClientRect();

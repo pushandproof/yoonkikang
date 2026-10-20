@@ -302,5 +302,16 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
   .gate input[type=email] { width: 100%; max-width: 280px; }
 
   .lock { position: static; padding: 52px var(--gutter); }
+  /* bigger tap areas without changing the look */
+  .main-nav a, .sub-nav a, .lang button, .contact .info a, .contact .pdf, .install .see a, .works-list a { position: relative; }
+  .main-nav a::after, .sub-nav a::after, .lang button::after, .contact .info a::after, .contact .pdf::after, .install .see a::after {
+    content: ""; position: absolute; inset: -10px -8px;
+  }
+  .works-list a::after { content: ""; position: absolute; inset: -3px -6px; }
+  .works-list { row-gap: 4px; }
+  /* CV: the works shown in an exhibition go on their own line */
+  .cv-table .sub { display: inline-block; margin: 0 .75em 0 0; }
+  .cv-table .sub:first-of-type { margin-left: 0; }
+  .cv-table span:has(> .sub) > a:first-child { display: block; }
   .lock input, .gate input[type=email] { font-size: 16px; }
 }

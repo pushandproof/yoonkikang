@@ -25,6 +25,9 @@
 
   // nothing on the page can be dragged around
   document.addEventListener("dragstart", (e) => e.preventDefault());
+  // phones: no pinch / double-tap zoom on the page (백 초 세기 handles its own pinch)
+  ["gesturestart", "gesturechange"].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
+  document.addEventListener("touchmove", (e) => { if (e.touches.length > 1 && !e.target.closest(".grid-view")) e.preventDefault(); }, { passive: false });
 
   /* ---------- wiki links ---------- */
   const work = (slug) => S.works.find((w) => w.slug === slug);
@@ -72,7 +75,7 @@
       <div class="lock-msg" aria-live="polite"></div>
     </form>`));
     const f = app.querySelector(".lock"), i = f.querySelector("input"), m = f.querySelector(".lock-msg");
-    i.focus();
+    if (hover) i.focus();
     on(i, "input", () => { m.textContent = ""; });
     on(f, "submit", async (e) => {
       e.preventDefault();

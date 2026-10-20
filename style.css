@@ -12,6 +12,8 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
+html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+a, button, input, label { touch-action: manipulation; }
 body {
   font-family: "Pretendard", -apple-system, "Helvetica Neue", Arial, sans-serif;
   font-size: var(--fs);
@@ -103,6 +105,7 @@ body.is-about .main-nav [data-nav="works"] { color: var(--mute); }
   text-align: center; line-height: 1.6; pointer-events: none;
 }
 .install .cap-block a { pointer-events: auto; }
+.install .cap { min-height: 6.4em; }  /* room for 4 lines, so the counter never jumps */
 .install .count { margin-top: 12px; color: var(--mute); min-height: 1em; }
 .install .see { margin-top: 12px; }
 .cursor-label {
@@ -254,7 +257,7 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
   /* installation */
   .install { min-height: 0; padding: 8px var(--gutter) 60px; }
   .install .stage { position: static; transform: none; }
-  .install .ph { width: 100%; height: auto; max-height: none; max-width: none; aspect-ratio: 1 / var(--r); }
+  .install .ph { width: 100%; height: auto; max-height: none; max-width: none; aspect-ratio: 4 / 5; }
   .install .cap-block { position: static; margin-top: 18px; }
 
   /* Breathing Faces: swipe strip, edge to edge */
@@ -291,4 +294,5 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
   .gate input[type=email] { width: 100%; max-width: 280px; }
 
   .lock { position: static; padding: 52px var(--gutter); }
+  .lock input, .gate input[type=email] { font-size: 16px; }
 }

@@ -256,8 +256,16 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
 
   /* installation */
   .install { min-height: 0; padding: 8px var(--gutter) 60px; }
-  .install .stage { position: static; transform: none; }
-  .install .ph { width: 100%; height: auto; max-height: none; max-width: none; aspect-ratio: 4 / 5; }
+  /* frame height fixed so image + caption fit on one screen; image keeps its own ratio inside it */
+  .install { --mh: max(200px, calc(100svh - 445px)); }
+  .install .stage {
+    position: static; transform: none; height: var(--mh);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .install .ph {
+    width: min(100%, calc(var(--mh) / var(--r))); height: auto;
+    max-height: none; max-width: none; aspect-ratio: 1 / var(--r);
+  }
   .install .cap-block { position: static; margin-top: 18px; }
 
   /* Breathing Faces: swipe strip, edge to edge */

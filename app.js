@@ -70,18 +70,24 @@
   }
 
   /* ---------- works ---------- */
+  const hasInstall = (w) => !!(w.installation && w.installation.images && w.installation.images.length);
+
   function works(slug, installation) {
     body.classList.add("is-works");
     const w = S.works.find((x) => x.slug === slug);
+    if (w && installation && !hasInstall(w)) installation = false;
     document.title = w ? `${w.title} — ${S.name}` : `Works — ${S.name}`;
 
     const list = S.works.map((x) => {
       const isOn = w && x.slug === w.slug;
       const instHref = isOn && installation ? `#/works/${x.slug}` : `#/works/${x.slug}/installation`;
+      const inst = hasInstall(x)
+        ? `<a class="inst${isOn && installation ? " active" : ""}" href="${instHref}">installation view</a>`
+        : `<span class="inst"></span>`;
       return `<div class="row${isOn ? " on" : ""}">
         <a href="#/works/${x.slug}">${x.title}</a>
         <a href="#/works/${x.slug}">${x.year}</a>
-        <a class="inst${isOn && installation ? " active" : ""}" href="${instHref}">installation view</a>
+        ${inst}
       </div>`;
     }).join("");
     app.append(h(`<nav class="works-list">${list}</nav>`));
@@ -98,13 +104,15 @@
     let k = 0;
     app.append(h(`<section class="install">
       <div class="stage"></div>
-      <div class="cap">${I.caption.filter(Boolean).join("<br>")}</div>
+      <div class="cap"></div>
       <div class="count"></div>
     </section><span class="cursor-label" aria-hidden="true"></span>`));
     const stage = app.querySelector(".stage"), count = app.querySelector(".count"), label = app.querySelector(".cursor-label");
+    const cap = app.querySelector(".cap");
     const show = () => {
       const im = list[k];
       stage.innerHTML = `<span class="ph" style="aspect-ratio:${1 / im.ratio}">${im.src ? `<img src="${im.src}" alt="">` : ""}</span>`;
+      cap.innerHTML = (im.caption || I.caption || []).filter(Boolean).join("<br>");
       count.textContent = list.length > 1 ? `${k + 1} / ${list.length}` : "";
     };
     const go = (d) => { if (list.length < 2) return; k = (k + d + list.length) % list.length; show(); };
@@ -137,7 +145,9 @@
   function strip(w) {
     const n = w.images.length || w.count;
     const srcs = Array.from({ length: n }, (_, i) => (w.images[i] && w.images[i].src) || testCard(i + 1));
-    const tiles = srcs.map((src, i) => `<span class="ph" data-i="${i}"><img src="${src}" alt="" loading="lazy"></span>`).join("");
+    // each tile keeps its own proportions (ratio = height / width); default is the 4:5 portrait
+    const ratio = (i) => (w.images[i] && w.images[i].ratio) || 1.28;
+    const tiles = srcs.map((src, i) => `<span class="ph" data-i="${i}" style="--r:${ratio(i)}"><img src="${src}" alt="" loading="lazy"></span>`).join("");
     app.append(h(`<div class="loupe"></div><div class="strip-wrap"><div class="strip">${tiles}</div></div>`));
 
     const wrap = app.querySelector(".strip-wrap");

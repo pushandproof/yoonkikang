@@ -108,13 +108,13 @@ body.is-locked .main-nav { visibility: hidden; }
 
 /* ---------- Breathing Faces — strip ---------- */
 .strip-wrap {
-  position: fixed; left: 0; right: 0; top: 250px; z-index: 10;
+  position: fixed; left: 0; right: 0; top: 340px; z-index: 10;
   overflow-x: auto; overflow-y: hidden;
   scrollbar-width: none;
 }
 .strip-wrap::-webkit-scrollbar { display: none; }
 .strip { display: flex; gap: 14px; width: max-content; }
-.strip .ph { width: 287px; height: 368px; flex: none; cursor: zoom-in; background: #e2e2e2;
+.strip .ph { --r: 1.28; height: 368px; width: calc(368px / var(--r)); flex: none; cursor: zoom-in; background: #e2e2e2;
   transition: opacity .1s linear; transition-delay: var(--d, 0ms); }
 .strip .ph.hot { transition-delay: 0ms; }
 .loupe {
@@ -232,7 +232,7 @@ body.loupe-on .strip .ph:not(.hot) { opacity: 0; }
   /* Breathing Faces: swipe strip, edge to edge */
   .strip-wrap { position: static; padding: 0 var(--gutter) 60px; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); }
   .strip { gap: 8px; }
-  .strip .ph { width: 72vw; height: calc(72vw * 1.28); scroll-snap-align: start; cursor: auto; }
+  .strip .ph { height: min(calc(72vw * 1.28), calc(88vw * var(--r))); width: calc(min(calc(72vw * 1.28), calc(88vw * var(--r))) / var(--r)); scroll-snap-align: start; cursor: auto; }
   .loupe { display: none; }
 
   /* 백 초 세기 */
